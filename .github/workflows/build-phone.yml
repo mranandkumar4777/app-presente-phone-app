@@ -1,0 +1,54 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies & Build Phone App
+        run: |
+          cd app-presente-phone-app
+          npm install
+          # ఒకవేళ ఫోన్ యాప్ కోసం ప్రత్యేకంగా బిల్డ్ స్క్రిప్ట్ ఉంటే ఇక్కడ రన్ చేయవచ్చు, 
+          # లేదంటే అవసరమైన వెబ్ ఫైల్స్/ప్యాకేజింగ్ ఇక్కడ జరుగుతుంది.
+
+      - name: Build Android APK (Cordova/Capacitor/Kotlin check)
+        working-directory: app-presente-phone-app
+        run: |
+          if [ -f "gradlew" ]; then
+            chmod +x gradlew
+            ./gradlew assembleDebug
+          elif [ -d "phone-app-android" ]; then
+            cd phone-app-android
+            chmod +x gradlew
+            ./gradlew assembleDebug
+          else
+            echo "Gradle wrapper not found, checking package.json scripts..."
+            npm run build || true
+          fi
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Android-Remote-APK
+          path: |
+            app-presente-phone-app/app/build/outputs/apk/debug/*.apk
+            app-presente-phone-app/phone-app-android/app/build/outputs/apk/debug/*.apk
+            app-presente-phone-app/dist/*.apk
