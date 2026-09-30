@@ -17,12 +17,14 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+        working-directory: app-presente-phone-app
 
       - name: Build Electron App
         run: npx electron-builder --win --x64 --publish never
+        working-directory: app-presente-phone-app
 
       - name: Upload Desktop App Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Desktop-Installer-Windows
-          path: dist/*.exe
+          path: app-presente-phone-app/dist/*.exe
